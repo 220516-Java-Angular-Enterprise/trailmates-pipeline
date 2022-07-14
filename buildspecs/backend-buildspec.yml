@@ -1,0 +1,49 @@
+version: 0.2
+
+env:
+  secrets-manager:
+    USERNAME: "trailmates-credentials:dbusername"
+    PASSWORD: "trailmates-credentials:dbpassword"
+    LOGIN: "SonarCloud:sonartoken"
+    HOST: "SonarCloud:HOST"
+    Organization: "SonarCloud:Organization"
+    Project: "SonarCloud:Project"
+
+phases:
+  install:
+    runtime-versions:
+      java: corretto11
+
+  pre_build:
+    commands:
+      - wget https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-3.3.0.1492-linux.zip
+      - unzip ./sonar-scanner-cli-3.3.0.1492-linux.zip
+      - export PATH=$PATH:/sonar-scanner-3.3.0.1492-linux/bin/
+
+  build:
+    commands:
+      - touch src/main/resources/application.properties
+      - echo "spring.application.name=TrailMates" > src/main/resources/application.properties
+      - echo "server.port=8080"  >> src/main/resources/application.properties
+      - echo "server.servlet.context-path=/TrailMates\n"  >> src/main/resources/application.properties
+
+      - echo "# Basic JDBC configuration values" >> src/main/resources/application.properties
+      - echo "spring.datasource.driver-class-name=org.postgresql.Driver"  >> src/main/resources/application.properties
+      - echo "spring.datasource.url=jdbc:postgresql://trailmatesdb.cejddctct9ov.us-east-1.rds.amazonaws.com:5432/postgres?currentSchema=trailmatesdb" >> src/main/resources/application.properties
+      - echo "spring.jpa.properties.hibernate.default_schema=trailmatesdb"  >> src/main/resources/application.properties
+      - echo "spring.datasource.username=$USERNAME"  >> src/main/resources/application.properties
+      - echo "spring.datasource.password=$PASSWORD\n"  >> src/main/resources/application.properties
+
+      - echo "# JPA configurations" >> src/main/resources/application.properties
+      - echo "spring.jpa.database-platform=org.hibernate.dialect.PostgreSQL10Dialect"  >> src/main/resources/application.properties
+      - echo "spring.jpa.show-sql=true"  >> src/main/resources/application.properties
+      - echo "spring.jpa.hibernate.ddl-auto=update"  >> src/main/resources/application.properties
+      - mvn clean package
+
+  post_build:
+    commands:
+      - mv target/*.jar trailmates.jar
+
+artifacts:
+  files:
+    - trailmates.jar

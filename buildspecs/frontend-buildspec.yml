@@ -1,0 +1,18 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 16
+    commands:
+      - echo Installing angular cli...
+      - cd Trailmates
+      - npm install -g @angular/cli
+      - npm install
+      - echo Build started...
+      - ng build
+
+artifacts:
+  files:
+      - '**/*'
+  base-directory: 'Trailmates/dist/trailmates'
